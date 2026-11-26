@@ -1,0 +1,409 @@
+<title>PB Health Feedback</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap">
+<style>
+  /* ---- PB Health brand tokens (pulled from the live pbhealth.com CSS) ----
+     Layout: a real site chrome (logo header + cream page) wrapping one centered feedback card. */
+  :root{
+    color-scheme: light;
+    --blue:#06569a;        /* --color-primary   */
+    --blue-dark:#054776;   /* --color-primary-dark */
+    --blue-50:#eaf4fd;
+    --blue-100:#dbefff;
+    --orange:#e84e23;      /* --color-secondary */
+    --navy:#1b2a41;        /* --color-surface-ink */
+    --ink:#232323;         /* --color-text-primary */
+    --muted:#5a6472;
+    --faint:#8a93a0;
+    --line:#e7e9ee;
+    --cream:#fdfbf6;       /* --color-surface-cream */
+    --surface:#ffffff;
+    --good:#53b03a;        /* from --color-report-good #6cbf3a, deepened for text */
+    --good-face:#6cbf3a;
+    --warn:#ef9a2e;        /* --color-report-warning */
+    --risk:#f04d53;        /* from --color-report-risk #f85a5f */
+    --radius:18px;
+    --shadow:0 18px 50px rgba(16,32,61,.10), 0 3px 10px rgba(16,32,61,.05);
+    --font:"IBM Plex Sans", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    --serif:"Source Serif 4", Georgia, "Times New Roman", serif;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:var(--font);
+    color:var(--ink);
+    background:
+      radial-gradient(1100px 420px at 50% -8%, var(--blue-50) 0%, rgba(234,244,253,0) 62%),
+      var(--cream);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+  }
+  .wrap{
+    padding-left:max(16px, env(safe-area-inset-left,0px));
+    padding-right:max(16px, env(safe-area-inset-right,0px));
+  }
+
+  /* ---------- Site header ---------- */
+  header.site{
+    background:rgba(255,255,255,.92);
+    backdrop-filter:saturate(1.1) blur(6px);
+    border-bottom:1px solid var(--line);
+  }
+  .site .bar{
+    max-width:1040px;margin:0 auto;height:64px;
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+  }
+  .logo svg{height:32px;width:auto;display:block}
+  .support{
+    display:flex;align-items:center;gap:8px;
+    color:var(--navy);font-weight:600;font-size:.86rem;text-decoration:none;white-space:nowrap;
+  }
+  .support .ic{width:30px;height:30px;border-radius:50%;background:var(--blue-50);
+    display:grid;place-items:center;color:var(--blue)}
+  .support .ic svg{width:15px;height:15px}
+  .support small{display:block;color:var(--faint);font-weight:500;font-size:.68rem;line-height:1}
+  @media (max-width:520px){ .support .txt{display:none} }
+
+  /* ---------- Card ---------- */
+  main{max-width:580px;margin:0 auto;padding:28px 0 56px}
+  .card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:clamp(22px,5vw,34px);
+  }
+  .eyebrow{
+    font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--blue);margin:0 0 10px;
+  }
+  h1.q{
+    font-family:var(--serif);font-weight:600;font-size:clamp(1.5rem,5vw,1.95rem);
+    line-height:1.18;letter-spacing:-.01em;color:var(--navy);margin:0 0 8px;text-wrap:balance;
+  }
+  .lede{color:var(--muted);margin:0 0 22px;font-size:.98rem}
+
+  .section-label{font-weight:600;font-size:1.02rem;color:var(--navy);margin:0 0 14px}
+
+  /* ---------- Smiley rating ---------- */
+  .faces{display:flex;gap:10px}
+  .face{
+    flex:1;min-width:0;background:var(--surface);border:1.5px solid var(--line);
+    border-radius:14px;padding:16px 8px 12px;cursor:pointer;text-align:center;
+    transition:transform .15s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease, opacity .15s ease;
+    color:var(--c);display:flex;flex-direction:column;align-items:center;gap:8px;
+  }
+  .face svg{width:46px;height:46px;transition:transform .18s ease}
+  .face .flabel{font-weight:600;font-size:.84rem;color:var(--navy);line-height:1.15}
+  .face:hover{border-color:var(--c);transform:translateY(-2px)}
+  .face:focus-visible{outline:3px solid var(--blue-100);outline-offset:2px}
+  .faces[data-chosen="1"] .face[aria-pressed="false"]{opacity:.5}
+  .face[aria-pressed="true"]{
+    border-color:var(--c);border-width:2px;
+    background:color-mix(in srgb, var(--c) 9%, white);
+    box-shadow:0 8px 22px color-mix(in srgb, var(--c) 22%, transparent);
+  }
+  .face[aria-pressed="true"] svg{transform:scale(1.08)}
+
+  /* ---------- Reveal block ---------- */
+  .follow{margin-top:26px;animation:rise .28s ease both}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  label.fld{display:block;font-weight:600;font-size:.95rem;color:var(--navy);margin:0 0 9px}
+  textarea{
+    width:100%;min-height:84px;resize:vertical;font:inherit;color:var(--ink);
+    padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fcfdff;
+  }
+  textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-50)}
+
+  /* ---------- NPS ---------- */
+  .nps{margin-top:24px}
+  .nps .hint{color:var(--muted);font-size:.86rem;margin:4px 0 12px}
+  .scale{display:flex;flex-wrap:wrap;gap:7px}
+  .scale button{
+    width:clamp(38px,8vw,44px);height:44px;border:1.5px solid var(--line);background:var(--surface);
+    border-radius:10px;font:inherit;font-weight:600;font-size:.95rem;color:var(--navy);cursor:pointer;
+    transition:transform .12s ease, border-color .12s ease, background .12s ease, color .12s ease;
+  }
+  .scale button:hover{border-color:var(--blue);transform:translateY(-1px)}
+  .scale button:focus-visible{outline:3px solid var(--blue-100);outline-offset:2px}
+  .scale button[aria-pressed="true"]{color:#fff;border-color:transparent;background:var(--z)}
+  .ends{display:flex;justify-content:space-between;color:var(--faint);font-size:.76rem;margin-top:8px}
+  .nps.missing .scale{animation:shake .35s}
+  .nps.missing .hint{color:var(--risk)}
+  @keyframes shake{10%,90%{transform:translateX(-1px)}30%,70%{transform:translateX(3px)}50%{transform:translateX(-3px)}}
+
+  /* ---------- Ticket (poor only) ---------- */
+  .ticket{margin-top:24px;background:var(--blue-50);border:1px solid var(--blue-100);
+    border-radius:14px;padding:18px}
+  .ticket p{margin:0 0 4px;font-weight:600;color:var(--navy)}
+  .ticket .sub{margin:0 0 14px;font-weight:400;color:var(--muted);font-size:.86rem}
+  .yn{display:flex;gap:10px;flex-wrap:wrap}
+  .yn button{
+    flex:1;min-width:120px;border:1.5px solid var(--line);background:var(--surface);font:inherit;
+    font-weight:600;color:var(--navy);padding:12px 14px;border-radius:11px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:8px;transition:all .12s ease;
+  }
+  .yn button:hover{border-color:var(--blue)}
+  .yn button:focus-visible{outline:3px solid var(--blue-100);outline-offset:2px}
+  .yn button[data-v="yes"][aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
+  .yn button[data-v="no"][aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+
+  /* ---------- Submit ---------- */
+  .actions{margin-top:28px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .submit{
+    background:var(--blue);color:#fff;border:0;font:inherit;font-weight:600;font-size:1rem;
+    padding:14px 28px;border-radius:12px;cursor:pointer;transition:background .15s ease, transform .12s ease;
+    box-shadow:0 10px 22px rgba(6,86,154,.22);
+  }
+  .submit:hover{background:var(--blue-dark);transform:translateY(-1px)}
+  .submit:focus-visible{outline:3px solid var(--blue-100);outline-offset:3px}
+  .assure{color:var(--faint);font-size:.8rem;display:flex;align-items:center;gap:6px}
+  .assure svg{width:14px;height:14px}
+
+  /* ---------- Thank you ---------- */
+  .thanks{text-align:center;padding:14px 4px}
+  .thanks .check{width:72px;height:72px;margin:0 auto 18px;border-radius:50%;
+    background:color-mix(in srgb, var(--good) 14%, white);display:grid;place-items:center;
+    animation:pop .4s ease both}
+  .thanks .check svg{width:38px;height:38px;color:var(--good)}
+  @keyframes pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+  .thanks h2{font-family:var(--serif);font-weight:600;color:var(--navy);font-size:1.6rem;margin:0 0 8px}
+  .thanks p{color:var(--muted);margin:0 auto;max-width:360px}
+  .thanks .callout{margin-top:16px;background:var(--blue-50);border:1px solid var(--blue-100);
+    border-radius:12px;padding:14px 16px;color:var(--navy);font-size:.9rem}
+
+  footer.site{padding:0 0 40px;margin-top:30px}
+  .legal{max-width:760px;margin:0 auto;padding-top:22px;border-top:1px solid var(--line);
+    text-align:center;color:#7d7d7d;font-size:.78rem;line-height:1.65;
+    display:flex;flex-direction:column;align-items:center;gap:3px}
+  .legal .dot{color:#c7ccd3}
+  .legal .cin{max-width:650px}
+
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<header class="site">
+  <div class="bar wrap">
+    <span class="logo" aria-label="PB Health">
+      <svg width="121" height="47" viewBox="0 0 121 47" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PB Health logo">
+        <mask id="m0" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="25" y="0" width="18" height="16"><path d="M42.7218 15.92V14.9479C42.7218 14.213 42.4261 13.5063 41.8984 12.9871L29.5663 0.812837C29.0386 0.291959 28.3243 0 27.5798 0H25.6724L26.5967 4.18196L38.6498 15.9449L42.7218 15.9183V15.92Z" fill="white"/></mask>
+        <g mask="url(#m0)"><path d="M42.7218 0H25.6724V15.9449H42.7218V0Z" fill="url(#g0)"/></g>
+        <mask id="m1" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="0" y="25" width="17" height="18"><path d="M0.012207 27.216C0.012207 27.9509 0.307989 28.6576 0.835691 29.1768L13.1695 41.3494C13.6972 41.8703 14.4114 42.1623 15.1559 42.1623H16.1407L16.1861 38.1528L4.25063 26.2456L0.0138876 25.3333V27.216H0.012207Z" fill="white"/></mask>
+        <g mask="url(#m1)"><path d="M16.1844 25.3333H0.012207V42.1623H16.1844V25.3333Z" fill="url(#g1)"/></g>
+        <path d="M26.6011 0.00012207H21.225C18.4133 0.00012207 16.1345 2.24952 16.1345 5.02478V40.0281L16.1026 40.8012C16.0757 41.4299 15.6555 41.9773 15.0488 42.1714H21.5107C24.3223 42.1714 26.6011 39.922 26.6011 37.1467V2.14335L26.6331 1.37033C26.6599 0.741629 27.0801 0.194207 27.6868 0.00012207H26.6011Z" fill="#00589F"/>
+        <path d="M0.00537109 26.2499V20.9433C0.00537109 18.168 2.28424 15.9186 5.09585 15.9186H40.5578L41.3409 15.8871C41.9778 15.8605 42.5324 15.4458 42.7291 14.847V21.2253C42.7291 24.0005 40.4502 26.2499 37.6386 26.2499H2.17668L1.39353 26.2814C0.75659 26.308 0.201999 26.7227 0.00537109 27.3215V26.2499Z" fill="#00589F"/>
+        <path d="M47.2154 37.482V35.012C47.8003 33.6036 48.9918 32.7045 50.7228 32.7045C52.7345 32.7045 54.1831 34.3435 54.1831 36.6509C54.1831 38.9584 52.7798 40.5973 50.6758 40.5973C48.8523 40.5973 47.286 39.2819 47.2154 37.482ZM44.9231 41.1962C44.9231 42.0273 45.3433 42.2811 45.9517 42.2811H46.2088C46.7936 42.2811 47.2138 42.0273 47.2138 41.1962V40.5277C47.8221 41.5893 49.2019 42.4901 51.0942 42.4901C54.205 42.4901 56.425 40.113 56.425 36.6277C56.425 33.1425 54.1798 30.8118 51.1648 30.8118C49.412 30.8118 48.1246 31.5732 47.2373 32.8207V28.297C47.2373 26.7045 46.4659 26.3346 45.7651 26.3346C45.2979 26.3346 44.9231 26.5187 44.9231 26.5884V41.1978V41.1962ZM33.5372 37.3427V35.012C34.1221 33.6036 35.3136 32.7045 37.0446 32.7045C39.0562 32.7045 40.5049 34.3435 40.5049 36.6509C40.5049 38.9584 39.1016 40.5973 36.9975 40.5973C35.127 40.5973 33.5372 39.2122 33.5372 37.3427ZM31.2466 45.6286C31.2466 46.4597 31.6684 46.7135 32.2751 46.7135H32.5322C33.1171 46.7135 33.5607 46.4597 33.5607 45.6286V40.4132C34.1926 41.5213 35.5489 42.4901 37.4193 42.4901C40.5284 42.4901 42.7501 40.113 42.7501 36.6277C42.7501 33.1425 40.5066 30.8118 37.4899 30.8118C35.69 30.8118 34.4044 31.5964 33.5389 32.9119C33.5154 31.3426 32.7675 30.9727 32.0902 30.9727C31.623 30.9727 31.2483 31.1568 31.2483 31.2265V45.627L31.2466 45.6286Z" fill="#F15623"/>
+        <path d="M110.625 41.1964C110.625 42.0274 111.045 42.2813 111.652 42.2813H111.911C112.496 42.2813 112.938 42.0274 112.938 41.1964V36.0738C112.938 34.0666 114.176 32.8192 116.094 32.8192C117.706 32.8192 118.69 33.9505 118.69 35.8648V41.1964C118.69 42.0274 119.111 42.2813 119.717 42.2813H119.976C120.561 42.2813 121.003 42.0274 121.003 41.1964V35.611C121.003 32.8424 119.623 30.8103 116.654 30.8103C114.901 30.8103 113.686 31.6646 112.936 32.8407V28.2938C112.936 26.7013 112.163 26.3314 111.462 26.3314C110.995 26.3314 110.622 26.5156 110.622 26.5852V41.1947L110.625 41.1964ZM102.79 38.8209C102.79 41.2212 103.842 42.4903 106.157 42.4903C107.817 42.4903 108.777 41.6592 108.777 40.8049C108.777 40.0899 108.192 39.7664 108.121 39.8361C107.768 40.2973 107.254 40.6207 106.53 40.6207C105.432 40.6207 105.034 39.9522 105.034 38.5671V32.9585H107.583C108.306 32.9585 108.587 32.6583 108.587 32.081V31.9184C108.587 31.3644 108.328 31.0873 107.607 31.0873H105.058V29.3787C105.058 28.5244 104.659 28.2938 104.053 28.2938H103.819C103.187 28.2938 102.79 28.5941 102.79 29.3787V31.0873H101.972C101.248 31.0873 100.967 31.3876 100.967 31.9416V32.1026C100.967 32.6566 101.248 32.9569 101.972 32.9569H102.79V38.8192V38.8209ZM96.6647 41.1964C96.6647 42.0274 97.1084 42.2813 97.7168 42.2813H97.9504C98.5587 42.2813 98.9789 42.0274 98.9789 41.1964V28.2955C98.9789 26.703 98.231 26.3331 97.5067 26.3331C97.063 26.3331 96.6647 26.5172 96.6647 26.5869V41.1964ZM85.9561 39.1892C85.9561 37.6896 87.64 37.0891 90.9121 36.9729L91.544 36.9497V37.804C91.544 39.5574 90.0937 40.8049 88.0837 40.8049C86.751 40.8049 85.9561 40.1811 85.9561 39.1892ZM83.689 39.2821C83.689 41.1748 85.1158 42.4438 87.5241 42.4438C89.2299 42.4438 90.7037 41.7289 91.5692 40.5278C91.5927 41.8665 92.1776 42.3045 92.996 42.3045C93.4162 42.3045 93.838 42.1651 93.838 42.0507V35.2428C93.838 32.4277 92.1087 30.812 88.9273 30.812C85.746 30.812 84.1108 32.4045 84.1108 33.4661C84.1108 34.5278 85.5376 34.5975 85.5376 34.5742C86.0519 33.559 87.0569 32.6815 88.7643 32.6815C90.5642 32.6815 91.5474 33.6055 91.5474 35.2892V35.5198H91.2432C86.1695 35.6127 83.6907 36.7191 83.6907 39.2821H83.689ZM73.2139 35.7039C73.4946 33.8576 74.9214 32.5421 76.7684 32.5421C78.6153 32.5421 79.832 33.7879 79.948 35.7039H73.2139ZM71.0393 36.6976C71.0393 40.1596 73.424 42.4903 76.9784 42.4903C80.0421 42.4903 81.7714 40.9442 81.7714 39.9754C81.7714 39.0067 80.6018 38.7977 80.5564 38.8441C79.9715 39.8361 78.9901 40.6904 77.0255 40.6904C74.8979 40.6904 73.3551 39.3053 73.1904 37.2516H81.4908C82.0286 37.2516 82.1916 37.0675 82.1916 36.5814V36.3973C82.1916 33.0746 80.0404 30.812 76.7902 30.812C73.54 30.812 71.0393 33.3268 71.0393 36.6976ZM58.6013 41.1964C58.6013 42.0274 59.0214 42.2813 59.6298 42.2813H59.8869C60.4718 42.2813 60.9154 42.0274 60.9154 41.1964V36.0738C60.9154 34.0666 62.1557 32.8192 64.0716 32.8192C65.6849 32.8192 66.6664 33.9505 66.6664 35.8648V41.1964C66.6664 42.0274 67.0865 42.2813 67.6949 42.2813H67.952C68.5369 42.2813 68.9805 42.0274 68.9805 41.1964V35.611C68.9805 32.8424 67.6008 30.8103 64.6312 30.8103C62.8784 30.8103 61.6616 31.6646 60.9138 32.8407V28.2938C60.9138 26.7013 60.1424 26.3314 59.4416 26.3314C58.9744 26.3314 58.5996 26.5156 58.5996 26.5852V41.1947L58.6013 41.1964Z" fill="#00589F"/>
+        <mask id="m2" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="26" y="14" width="17" height="13"><path d="M42.7313 14.848H26.6045V26.2509H42.7313V14.848Z" fill="white"/></mask>
+        <g mask="url(#m2)"><path fill-rule="evenodd" clip-rule="evenodd" d="M26.5996 15.92V26.2513H37.636C40.4476 26.2513 42.7264 24.0019 42.7264 21.2283V14.85C42.5298 15.4489 41.9769 15.8636 41.3383 15.8901L40.5551 15.9216H26.5996V15.92Z" fill="#004272"/></g>
+        <mask id="m3" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="0" y="15" width="17" height="13"><path d="M16.1395 15.9209H0.0126953V27.3238H16.1395V15.9209Z" fill="white"/></mask>
+        <g mask="url(#m3)"><path d="M16.1422 26.2503V15.9189H5.10415C2.29254 15.9206 0.0136719 18.17 0.0136719 20.9436V27.3219C0.2103 26.723 0.764891 26.3083 1.40183 26.2818L2.18498 26.2503H16.1422Z" fill="#004272"/></g>
+        <defs>
+          <linearGradient id="g0" x1="28.6588" y1="2.34395" x2="40.3797" y2="14.5679" gradientUnits="userSpaceOnUse"><stop stop-color="#D34B20"/><stop offset="0.07" stop-color="#BB4C2E"/><stop offset="0.25" stop-color="#824F50"/><stop offset="0.43" stop-color="#54526C"/><stop offset="0.6" stop-color="#2F5582"/><stop offset="0.75" stop-color="#155692"/><stop offset="0.89" stop-color="#05579B"/><stop offset="1" stop-color="#00589F"/></linearGradient>
+          <linearGradient id="g1" x1="2.87255" y1="27.8381" x2="13.9747" y2="40.7229" gradientUnits="userSpaceOnUse"><stop stop-color="#D34B20"/><stop offset="0.07" stop-color="#BB4C2E"/><stop offset="0.25" stop-color="#824F50"/><stop offset="0.43" stop-color="#54526C"/><stop offset="0.6" stop-color="#2F5582"/><stop offset="0.75" stop-color="#155692"/><stop offset="0.89" stop-color="#05579B"/><stop offset="1" stop-color="#00589F"/></linearGradient>
+        </defs>
+      </svg>
+    </span>
+    <a class="support" href="tel:18001201201">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg></span>
+      <span class="txt"><small>Call support</small>1800-1201-201</span>
+    </a>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- ======== FORM ======== -->
+  <section class="card" id="formCard">
+    <h1 class="q">Overall, how was your experience?</h1>
+    <p class="lede">Thank you for choosing PB Health. Just two quick questions — it takes about a minute, and it helps us take better care of you.</p>
+
+    <div class="faces" id="faces" data-chosen="0" role="group" aria-label="Rate your experience">
+      <button type="button" class="face" data-score="3" aria-pressed="false" style="--c:var(--good)">
+        <svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="24" cy="24" r="21" stroke="currentColor" stroke-width="3"/><circle cx="17" cy="20" r="2.4" fill="currentColor"/><circle cx="31" cy="20" r="2.4" fill="currentColor"/><path d="M15 29c2.4 3.4 5.6 5 9 5s6.6-1.6 9-5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+        <span class="flabel">Good</span>
+      </button>
+      <button type="button" class="face" data-score="2" aria-pressed="false" style="--c:var(--warn)">
+        <svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="24" cy="24" r="21" stroke="currentColor" stroke-width="3"/><circle cx="17" cy="20" r="2.4" fill="currentColor"/><circle cx="31" cy="20" r="2.4" fill="currentColor"/><path d="M16 31h16" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+        <span class="flabel">Can be better</span>
+      </button>
+      <button type="button" class="face" data-score="1" aria-pressed="false" style="--c:var(--risk)">
+        <svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="24" cy="24" r="21" stroke="currentColor" stroke-width="3"/><circle cx="17" cy="20" r="2.4" fill="currentColor"/><circle cx="31" cy="20" r="2.4" fill="currentColor"/><path d="M15 33c2.4-3.4 5.6-5 9-5s6.6 1.6 9 5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+        <span class="flabel">Poor</span>
+      </button>
+    </div>
+
+    <!-- revealed after a rating is chosen -->
+    <div class="follow" id="follow" hidden>
+      <div>
+        <label class="fld" id="followLabel" for="comment">Anything you'd like to suggest? <span style="font-weight:400;color:var(--faint)">(optional)</span></label>
+        <textarea id="comment" placeholder="Type here…"></textarea>
+      </div>
+
+      <!-- NPS: shown for Good / Can be better only -->
+      <div class="nps" id="npsBlock" hidden>
+        <label class="fld" id="npsLabel">How likely are you to recommend PB Health to family or friends?</label>
+        <p class="hint" id="npsHint">Pick a number from 0 to 10.</p>
+        <div class="scale" id="scale" role="group" aria-label="0 to 10, not at all likely to extremely likely"></div>
+        <div class="ends"><span>Not at all likely</span><span>Extremely likely</span></div>
+      </div>
+
+      <!-- Ticket: shown for Poor only -->
+      <div class="ticket" id="ticketBlock" hidden>
+        <p>Can we make this right?</p>
+        <p class="sub">Would you like our Customer Experience team to call you about this? We'll reach you on your registered number.</p>
+        <div class="yn" id="yn" role="group" aria-label="Would you like a callback">
+          <button type="button" data-v="yes" aria-pressed="false">Yes, please call me</button>
+          <button type="button" data-v="no" aria-pressed="false">No, thank you</button>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="submit" id="submit">Submit feedback</button>
+        <span class="assure"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Your details stay private</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== THANK YOU ======== -->
+  <section class="card thanks" id="thanksCard" hidden>
+    <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
+    <h2>Thank you</h2>
+    <p>Your feedback helps us take better care of you.</p>
+    <div class="callout" id="callout" hidden>Our Customer Experience team will call you on your registered number shortly.</div>
+  </section>
+</main>
+
+<footer class="site wrap">
+  <div class="legal">
+    <span>© 2026 PB Health All rights reserved</span>
+    <span class="dot" aria-hidden="true">•</span>
+    <span class="cin">PB HEALTHCARE SERVICES PRIVATE LIMITED CIN: U86100HR2025PTC127240 Registered Office - Plot No.119, Sector - 44, Gurugram - 122001, Haryana</span>
+  </div>
+</footer>
+
+<script>
+/* =========================================================================
+   DATA CAPTURE — wire to a Google Form (works when this file is hosted on a
+   real page; a claude.ai artifact sandbox blocks the cross-site POST).
+   To enable: open the Google Form → ⋮ → "Get pre-filled link", fill dummy
+   answers, copy the link, read each field's entry.XXXX id, and paste below.
+   experience is sent as a SCORE 1-3; nps 0-10; callback Yes/No.
+   ========================================================================= */
+var CONFIG = {
+  formAction: "https://docs.google.com/forms/d/e/1FAIpQLSeqPuvsAKfrKSSnxiSC1lvIX1lycLzjq533po0A1cnCKMpWbw/formResponse",
+  entry: {
+    channel:    "entry.616254582",   // In-clinic visit / Online consult
+    score:      "entry.844249166",   // 1 | 2 | 3 (Good=3, Can be better=2, Poor=1)
+    comment:    "entry.700282731",   // free text
+    nps:        "entry.463586567",   // 0-10 (blank when Poor)
+    callback:   "entry.1226420100"   // Yes / No (blank unless Poor)
+  }
+};
+
+var state = { channel:"in-clinic", score:null, nps:null, callback:null };
+
+var FOLLOW_LABELS = {
+  3: 'Anything you’d like to suggest? <span style="font-weight:400;color:var(--faint)">(optional)</span>',
+  2: 'What should we improve? <span style="font-weight:400;color:var(--faint)">(optional)</span>',
+  1: 'What went wrong — what should we fix? <span style="font-weight:400;color:var(--faint)">(optional)</span>'
+};
+
+/* ---- channel is KNOWN from Cosmos, never asked of the patient ----
+   The personalized link Cosmos sends carries it, e.g. ...?ch=online */
+try{ var _ch=new URLSearchParams(location.search).get('ch'); if(_ch) state.channel=_ch; }catch(e){}
+
+/* ---- build NPS 0..10 ---- */
+var scale = document.getElementById('scale');
+function zoneColor(n){ return n<=6 ? 'var(--risk)' : (n<=8 ? 'var(--warn)' : 'var(--good)'); }
+for (var i=0;i<=10;i++){
+  (function(n){
+    var btn=document.createElement('button');
+    btn.type='button'; btn.textContent=n; btn.setAttribute('aria-pressed','false');
+    btn.setAttribute('aria-label', n+' out of 10');
+    btn.addEventListener('click', function(){
+      state.nps=n;
+      scale.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed','false');x.style.removeProperty('--z');});
+      btn.style.setProperty('--z', zoneColor(n));
+      btn.setAttribute('aria-pressed','true');
+      document.getElementById('npsBlock').classList.remove('missing');
+    });
+    scale.appendChild(btn);
+  })(i);
+}
+
+/* ---- smiley rating ---- */
+var faces=document.getElementById('faces');
+faces.querySelectorAll('.face').forEach(function(f){
+  f.addEventListener('click', function(){
+    state.score=parseInt(f.dataset.score,10);
+    faces.querySelectorAll('.face').forEach(function(x){x.setAttribute('aria-pressed','false');});
+    f.setAttribute('aria-pressed','true');
+    faces.setAttribute('data-chosen','1');
+    showFollow();
+  });
+});
+
+function showFollow(){
+  var s=state.score;
+  document.getElementById('followLabel').innerHTML = FOLLOW_LABELS[s];
+  var isPoor = (s===1);
+  document.getElementById('npsBlock').hidden = isPoor;        // no NPS for Poor
+  document.getElementById('ticketBlock').hidden = !isPoor;    // ticket only for Poor
+  if (isPoor){ state.nps=null; }
+  else { state.callback=null; document.querySelectorAll('#yn button').forEach(function(x){x.setAttribute('aria-pressed','false');}); }
+  var follow=document.getElementById('follow');
+  follow.hidden=false;
+  // re-trigger reveal animation
+  follow.style.animation='none'; void follow.offsetWidth; follow.style.animation='';
+}
+
+/* ---- callback yes/no ---- */
+document.querySelectorAll('#yn button').forEach(function(b){
+  b.addEventListener('click', function(){
+    document.querySelectorAll('#yn button').forEach(function(x){x.setAttribute('aria-pressed','false');});
+    b.setAttribute('aria-pressed','true');
+    state.callback = (b.dataset.v==='yes') ? 'Yes' : 'No';
+  });
+});
+
+/* ---- submit ---- */
+document.getElementById('submit').addEventListener('click', function(){
+  // NPS is required for Good / Can-be-better (the "recommend" question)
+  if (state.score!==1 && state.nps===null){
+    var nb=document.getElementById('npsBlock');
+    nb.classList.add('missing');
+    document.getElementById('npsHint').textContent='Please pick a number from 0 to 10.';
+    nb.scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+  var scoreLabel = {1:'Poor',2:'Can be better',3:'Good'}[state.score];
+  var payload = {
+    channel:  state.channel==='online' ? 'Online consult' : 'In-clinic visit',
+    score:    String(state.score),                 // stored as 1 / 2 / 3
+    comment:  document.getElementById('comment').value.trim(),
+    nps:      state.nps===null ? '' : String(state.nps),
+    callback: state.callback || ''
+  };
+  sendToGoogle(payload);
+  // show thank-you
+  document.getElementById('formCard').hidden=true;
+  var callout=document.getElementById('callout');
+  callout.hidden = !(state.score===1 && state.callback==='Yes');
+  document.getElementById('thanksCard').hidden=false;
+  window.scrollTo({top:0, behavior:'smooth'});
+  console.log('[PB Pulse] captured:', JSON.stringify(payload));
+});
+
+/* POST to Google. Inert inside the claude.ai sandbox (cross-site POST blocked),
+   fully functional once this file is hosted on a real page. */
+function sendToGoogle(p){
+  if (!CONFIG.formAction || CONFIG.formAction.indexOf('REPLACE')>-1) return;
+  try{
+    var fd=new FormData();
+    fd.append(CONFIG.entry.channel,  p.channel);
+    fd.append(CONFIG.entry.score,    p.score);
+    if (p.comment)  fd.append(CONFIG.entry.comment,  p.comment);
+    if (p.nps!=='') fd.append(CONFIG.entry.nps,      p.nps);
+    if (p.callback) fd.append(CONFIG.entry.callback, p.callback);
+    fetch(CONFIG.formAction, {method:'POST', mode:'no-cors', body:fd});
+  }catch(e){ /* ignore */ }
+}
+</script>
