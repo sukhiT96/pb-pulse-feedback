@@ -72,7 +72,7 @@
   @media (max-width:520px){ .support .txt{display:none} }
 
   /* ---------- Card ---------- */
-  main{max-width:580px;margin:0 auto;padding:28px 0 56px}
+  main{max-width:580px;margin:0 auto;padding:20px 0 40px}
   .card{
     background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
     box-shadow:var(--shadow);padding:clamp(22px,5vw,34px);
@@ -85,7 +85,7 @@
     font-family:var(--serif);font-weight:600;font-size:clamp(1.5rem,5vw,1.95rem);
     line-height:1.18;letter-spacing:-.01em;color:var(--navy);margin:0 0 8px;text-wrap:balance;
   }
-  .lede{color:var(--muted);margin:0 0 22px;font-size:.98rem}
+  .lede{color:var(--muted);margin:0 0 18px;font-size:.98rem}
 
   .section-label{font-weight:600;font-size:1.02rem;color:var(--navy);margin:0 0 14px}
 
@@ -110,18 +110,18 @@
   .face[aria-pressed="true"] svg{transform:scale(1.08)}
 
   /* ---------- Reveal block ---------- */
-  .follow{margin-top:26px;animation:rise .28s ease both}
+  .follow{margin-top:18px;animation:rise .28s ease both}
   @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
   label.fld{display:block;font-weight:600;font-size:.95rem;color:var(--navy);margin:0 0 9px}
   textarea{
-    width:100%;min-height:84px;resize:vertical;font:inherit;color:var(--ink);
+    width:100%;min-height:72px;resize:vertical;font:inherit;color:var(--ink);
     padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fcfdff;
   }
   textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-50)}
 
   /* ---------- NPS ---------- */
-  .nps{margin-top:24px}
-  .nps .hint{color:var(--muted);font-size:.86rem;margin:4px 0 12px}
+  .nps{margin-top:18px}
+  .nps .hint{color:var(--muted);font-size:.86rem;margin:2px 0 10px}
   .scale{display:flex;flex-wrap:nowrap;gap:clamp(4px,1.3vw,7px)}
   .scale button{
     flex:1 1 0;min-width:0;width:auto;padding:0;height:44px;border:1.5px solid var(--line);background:var(--surface);
@@ -153,7 +153,7 @@
   .yn button[data-v="no"][aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
 
   /* ---------- Submit ---------- */
-  .actions{margin-top:28px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .actions{margin-top:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
   .submit{
     background:var(--blue);color:#fff;border:0;font:inherit;font-weight:600;font-size:1rem;
     padding:14px 28px;border-radius:12px;cursor:pointer;transition:background .15s ease, transform .12s ease;
@@ -183,6 +183,30 @@
   .legal .dot{color:#c7ccd3}
   .legal .cin{max-width:650px}
 
+  /* ---- Compact mode for short viewports: keep Good / Can-be-better fully
+     visible (through Submit) without scrolling, on phones and short windows ---- */
+  @media (max-height:760px){
+    header.site .bar{height:52px}
+    main{padding:10px 0 26px}
+    .card{padding:16px 16px 18px}
+    h1.q{font-size:1.3rem;line-height:1.14;margin:0 0 6px}
+    .lede{font-size:.9rem;margin:0 0 12px}
+    .faces{gap:8px}
+    .face{padding:10px 6px 8px;gap:5px}
+    .face svg{width:38px;height:38px}
+    .face .flabel{font-size:.8rem}
+    .follow{margin-top:14px}
+    label.fld{margin:0 0 6px;font-size:.9rem}
+    textarea{min-height:52px;padding:9px 12px}
+    .nps{margin-top:14px}
+    .nps .hint{display:none}
+    .nps.missing .hint{display:block}
+    .ends{font-size:.72rem;margin-top:6px}
+    .actions{margin-top:14px}
+    .submit{padding:12px 22px}
+    .assure{font-size:.76rem}
+    footer.site{margin-top:16px;padding:0 0 18px}
+  }
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 <style>html{-webkit-text-size-adjust:100%}</style>
@@ -361,6 +385,8 @@ faces.querySelectorAll('.face').forEach(function(f){
 
 function showFollow(){
   var s=state.score;
+  // once they've answered, drop the intro line so the form fits the viewport
+  var _lede=document.querySelector('.lede'); if(_lede) _lede.hidden=true;
   document.getElementById('followLabel').innerHTML = FOLLOW_LABELS[s];
   var isPoor = (s===1);
   document.getElementById('npsBlock').hidden = isPoor;        // no NPS for Poor
