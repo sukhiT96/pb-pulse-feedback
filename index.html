@@ -186,32 +186,33 @@
   /* ---- Compact mode for short viewports: keep Good / Can-be-better fully
      visible (through Submit) without scrolling, on phones and short windows ---- */
   @media (max-height:760px){
-    header.site .bar{height:52px}
-    main{padding:10px 0 26px}
-    .card{padding:16px 16px 18px}
-    h1.q{font-size:1.3rem;line-height:1.14;margin:0 0 6px}
-    .lede{font-size:.9rem;margin:0 0 12px}
+    header.site .bar{height:50px}
+    main{padding:8px 0 24px}
+    .card{padding:14px 15px 16px}
+    h1.q{font-size:1.22rem;line-height:1.12;margin:0 0 4px}
+    .lede{font-size:.88rem;margin:0 0 10px}
     .faces{gap:8px}
-    .face{padding:10px 6px 8px;gap:5px}
-    .face svg{width:38px;height:38px}
-    .face .flabel{font-size:.8rem}
-    .follow{margin-top:14px}
-    label.fld{margin:0 0 6px;font-size:.9rem}
-    textarea{min-height:52px;padding:9px 12px}
-    .nps{margin-top:14px}
+    .face{padding:8px 6px 7px;gap:4px}
+    .face svg{width:34px;height:34px}
+    .face .flabel{font-size:.78rem}
+    .follow{margin-top:12px}
+    label.fld{margin:0 0 5px;font-size:.88rem}
+    textarea{min-height:46px;padding:8px 11px}
+    .nps{margin-top:12px}
     .nps .hint{display:none}
     .nps.missing .hint{display:block}
-    .ends{font-size:.72rem;margin-top:6px}
-    .actions{margin-top:14px}
-    .submit{padding:12px 22px}
-    .assure{font-size:.76rem}
-    footer.site{margin-top:16px;padding:0 0 18px}
+    .ends{display:none}
+    .actions{margin-top:12px}
+    .submit{padding:11px 20px}
+    .assure{display:none}
+    footer.site{margin-top:14px;padding:0 0 16px}
   }
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 <style>html{-webkit-text-size-adjust:100%}</style>
 </head>
 <body>
+<div id="page">
 <header class="site">
   <div class="bar wrap">
     <span class="logo" aria-label="PB Health">
@@ -310,6 +311,7 @@
     <span class="cin">PB HEALTHCARE SERVICES PRIVATE LIMITED CIN: U86100HR2025PTC127240 Registered Office - Plot No.119, Sector - 44, Gurugram - 122001, Haryana</span>
   </div>
 </footer>
+</div><!-- /#page -->
 
 <script>
 /* =========================================================================
@@ -397,7 +399,32 @@ function showFollow(){
   follow.hidden=false;
   // re-trigger reveal animation
   follow.style.animation='none'; void follow.offsetWidth; follow.style.animation='';
+  requestAnimationFrame(fitToViewport);
 }
+
+/* ---- Guarantee the Good / Can-be-better flow fits the viewport through the
+   Submit button (no scrolling). Compact CSS handles most phones; this scales
+   the content down only if it would still overflow. Poor keeps its ticket and
+   may scroll, so it's left alone. ---- */
+function fitToViewport(){
+  var page=document.getElementById('page');
+  if(!page) return;
+  page.style.transform='';
+  if(state.score===1) return;
+  var follow=document.getElementById('follow');
+  if(!follow || follow.hidden) return;
+  var submit=document.getElementById('submit');
+  if(!submit) return;
+  window.scrollTo(0,0);
+  var need=submit.getBoundingClientRect().bottom;
+  var avail=window.innerHeight-10;
+  if(need>avail){
+    page.style.transformOrigin='top center';
+    page.style.transform='scale('+Math.max(0.72, avail/need)+')';
+  }
+}
+window.addEventListener('resize', fitToViewport);
+if (document.fonts && document.fonts.ready){ document.fonts.ready.then(fitToViewport); }
 
 /* ---- callback yes/no ---- */
 document.querySelectorAll('#yn button').forEach(function(b){
