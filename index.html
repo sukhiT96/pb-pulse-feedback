@@ -122,10 +122,10 @@
   /* ---------- NPS ---------- */
   .nps{margin-top:24px}
   .nps .hint{color:var(--muted);font-size:.86rem;margin:4px 0 12px}
-  .scale{display:flex;flex-wrap:wrap;gap:7px}
+  .scale{display:flex;flex-wrap:nowrap;gap:clamp(4px,1.3vw,7px)}
   .scale button{
-    width:clamp(38px,8vw,44px);height:44px;border:1.5px solid var(--line);background:var(--surface);
-    border-radius:10px;font:inherit;font-weight:600;font-size:.95rem;color:var(--navy);cursor:pointer;
+    flex:1 1 0;min-width:0;width:auto;padding:0;height:44px;border:1.5px solid var(--line);background:var(--surface);
+    border-radius:10px;font:inherit;font-weight:600;font-size:clamp(.78rem,2.6vw,.95rem);color:var(--navy);cursor:pointer;
     transition:transform .12s ease, border-color .12s ease, background .12s ease, color .12s ease;
   }
   .scale button:hover{border-color:var(--blue);transform:translateY(-1px)}
