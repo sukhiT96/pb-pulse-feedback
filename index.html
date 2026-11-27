@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#06569a">
-<title>PB Health Feedback</title>
+<title>Patient feedback</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap">
@@ -298,15 +298,18 @@
 var CONFIG = {
   formAction: "https://docs.google.com/forms/d/e/1FAIpQLSeqPuvsAKfrKSSnxiSC1lvIX1lycLzjq533po0A1cnCKMpWbw/formResponse",
   entry: {
-    channel:    "entry.616254582",   // In-clinic visit / Online consult
     score:      "entry.844249166",   // 1 | 2 | 3 (Good=3, Can be better=2, Poor=1)
     comment:    "entry.700282731",   // free text
     nps:        "entry.463586567",   // 0-10 (blank when Poor)
-    callback:   "entry.1226420100"   // Yes / No (blank unless Poor)
+    callback:   "entry.1226420100",  // Yes / No (blank unless Poor)
+    // ---- hidden identifiers: prefilled from the link, NEVER shown to the patient ----
+    uhid:       "entry.778565009",   // UHID
+    cid:        "entry.779265595",   // Customer ID
+    enc:        "entry.1569082499"   // Encounter ID
   }
 };
 
-var state = { channel:"in-clinic", score:null, nps:null, callback:null };
+var state = { score:null, nps:null, callback:null, uhid:"", cid:"", enc:"" };
 
 var FOLLOW_LABELS = {
   3: 'Anything you’d like to suggest? <span style="font-weight:400;color:var(--faint)">(optional)</span>',
@@ -314,9 +317,16 @@ var FOLLOW_LABELS = {
   1: 'What went wrong — what should we fix? <span style="font-weight:400;color:var(--faint)">(optional)</span>'
 };
 
-/* ---- channel is KNOWN from Cosmos, never asked of the patient ----
-   The personalized link Cosmos sends carries it, e.g. ...?ch=online */
-try{ var _ch=new URLSearchParams(location.search).get('ch'); if(_ch) state.channel=_ch; }catch(e){}
+/* ---- Hidden identifiers, known from Cosmos and carried by the personalized
+   link each patient is sent. They are NEVER shown to or entered by the patient;
+   they ride along silently so each response ties back to the exact encounter.
+   e.g.  ...?uhid=PBH123456&cid=CUST789&enc=ENC456123  ---- */
+try{
+  var _p = new URLSearchParams(location.search);
+  state.uhid = _p.get('uhid') || '';
+  state.cid  = _p.get('cid')  || '';
+  state.enc  = _p.get('enc')  || '';
+}catch(e){}
 
 /* ---- build NPS 0..10 ---- */
 var scale = document.getElementById('scale');
@@ -384,11 +394,13 @@ document.getElementById('submit').addEventListener('click', function(){
   }
   var scoreLabel = {1:'Poor',2:'Can be better',3:'Good'}[state.score];
   var payload = {
-    channel:  state.channel==='online' ? 'Online consult' : 'In-clinic visit',
     score:    String(state.score),                 // stored as 1 / 2 / 3
     comment:  document.getElementById('comment').value.trim(),
     nps:      state.nps===null ? '' : String(state.nps),
-    callback: state.callback || ''
+    callback: state.callback || '',
+    uhid:     state.uhid,
+    cid:      state.cid,
+    enc:      state.enc
   };
   sendToGoogle(payload);
   // show thank-you
@@ -397,7 +409,7 @@ document.getElementById('submit').addEventListener('click', function(){
   callout.hidden = !(state.score===1 && state.callback==='Yes');
   document.getElementById('thanksCard').hidden=false;
   window.scrollTo({top:0, behavior:'smooth'});
-  console.log('[PB Pulse] captured:', JSON.stringify(payload));
+  console.log('[Patient feedback] captured:', JSON.stringify(payload));
 });
 
 /* POST to Google. Inert inside the claude.ai sandbox (cross-site POST blocked),
@@ -406,11 +418,13 @@ function sendToGoogle(p){
   if (!CONFIG.formAction || CONFIG.formAction.indexOf('REPLACE')>-1) return;
   try{
     var fd=new FormData();
-    fd.append(CONFIG.entry.channel,  p.channel);
     fd.append(CONFIG.entry.score,    p.score);
     if (p.comment)  fd.append(CONFIG.entry.comment,  p.comment);
     if (p.nps!=='') fd.append(CONFIG.entry.nps,      p.nps);
     if (p.callback) fd.append(CONFIG.entry.callback, p.callback);
+    if (p.uhid) fd.append(CONFIG.entry.uhid, p.uhid);
+    if (p.cid)  fd.append(CONFIG.entry.cid,  p.cid);
+    if (p.enc)  fd.append(CONFIG.entry.enc,  p.enc);
     fetch(CONFIG.formAction, {method:'POST', mode:'no-cors', body:fd});
   }catch(e){ /* ignore */ }
 }
